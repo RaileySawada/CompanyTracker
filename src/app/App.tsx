@@ -98,13 +98,13 @@ export default function App() {
         setSyncStatus("synced");
         setSyncMessage("Shared data loaded");
       })
-      .catch(() => {
+      .catch((error: Error) => {
         if (!isMounted) {
           return;
         }
 
         setSyncStatus("error");
-        setSyncMessage("Shared data unavailable");
+        setSyncMessage(error.message || "Shared data unavailable");
       });
 
     return () => {
@@ -176,11 +176,11 @@ export default function App() {
         setSyncStatus("synced");
         setSyncMessage("Shared data synced");
       })
-      .catch(() => {
+      .catch((error: Error) => {
         setCompanies(previousCompanies);
         cacheCompanies(previousCompanies);
         setSyncStatus("error");
-        setSyncMessage("Save failed. Not shared.");
+        setSyncMessage(error.message || "Save failed. Not shared.");
       });
   }
 

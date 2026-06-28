@@ -1,4 +1,4 @@
-const { getStore } = require("@netlify/blobs");
+const { connectLambda, getStore } = require("@netlify/blobs");
 const { randomUUID } = require("crypto");
 
 const STORE_NAME = "company-tracker";
@@ -80,22 +80,33 @@ async function readCompanies(store) {
 }
 
 exports.handler = async (event) => {
+  connectLambda(event);
   const store = getStore(STORE_NAME);
 
   if (event.httpMethod === "GET") {
-    const companies = await readCompanies(store);
-    return json(200, { companies });
+    try {
+      const companies = await readCompanies(store);
+      return json(200, { companies });
+    } catch (error) {
+      return json(500, {
+        message: "Unable to read shared companies.",
+        detail: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   }
 
-  if (event.httpMethod === "PUT") {
+  if (event.httpMethod === "POST" || event.httpMethod === "PUT") {
     try {
       const payload = JSON.parse(event.body || "{}");
       const companies = normalizeCompanies(payload.companies);
 
       await store.setJSON(STORE_KEY, companies);
       return json(200, { companies });
-    } catch {
-      return json(400, { message: "Invalid company payload." });
+    } catch (error) {
+      return json(400, {
+        message: "Unable to save shared companies.",
+        detail: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   }
 
