@@ -10,6 +10,8 @@ export function ViewPage({
   distance,
   geoError,
   goToNextCompany,
+  isArrived,
+  mapOrigin,
   reorderCompanies,
   selectedCompany,
   selectedId,
@@ -23,6 +25,8 @@ export function ViewPage({
   distance: number | null;
   geoError: string;
   goToNextCompany: () => void;
+  isArrived: boolean;
+  mapOrigin: GeoPoint | null;
   reorderCompanies: (sourceId: string, targetId: string) => void;
   selectedCompany?: Company;
   selectedId: string;
@@ -32,7 +36,6 @@ export function ViewPage({
   userLocation: GeoPoint | null;
 }) {
   const gpsStatus = geoError || (userLocation ? "GPS connected" : "Requesting GPS");
-  const isArrived = distance !== null && distance <= ARRIVAL_RADIUS_METERS;
   const arrivalState = isArrived ? "You're here" : "En route";
 
   return (
@@ -92,7 +95,7 @@ export function ViewPage({
                   </button>
                 </div>
               ) : null}
-              <MapPanel company={selectedCompany} userLocation={userLocation} />
+              <MapPanel company={selectedCompany} userLocation={mapOrigin} />
               <div className="route-card">
                 <p className="eyebrow">Distance</p>
                 <strong>{formatDistance(distance)}</strong>

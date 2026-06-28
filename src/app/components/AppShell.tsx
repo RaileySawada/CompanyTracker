@@ -6,10 +6,14 @@ export function AppShell({
   children,
   route,
   setRoute,
+  syncMessage,
+  syncStatus,
 }: {
   children: ReactNode;
   route: Route;
   setRoute: (route: Route) => void;
+  syncMessage: string;
+  syncStatus: "idle" | "loading" | "saving" | "synced" | "error";
 }) {
   return (
     <main className="app-shell">
@@ -51,6 +55,7 @@ export function AppShell({
         <div className="footer-meta">
           <span>Serverless on Netlify</span>
           <span>Shared with Netlify Blobs</span>
+          <span className={`sync-pill ${syncStatus}`}>{syncMessage}</span>
         </div>
       </footer>
     </main>

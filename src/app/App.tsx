@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "./components/AppShell";
 import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import {
@@ -7,10 +7,14 @@ import {
   loadCompaniesFallback,
   saveSharedCompanies,
 } from "./lib/companiesApi";
-import { metersBetween } from "./lib/geo";
+import { ARRIVAL_RADIUS_METERS, metersBetween } from "./lib/geo";
 import { EditPage } from "./pages/EditPage";
 import { ViewPage } from "./pages/ViewPage";
 import type { Company, GeoPoint, Route } from "./types";
+
+type SyncStatus = "idle" | "loading" | "saving" | "synced" | "error";
+
+const MAP_ORIGIN_UPDATE_METERS = 35;
 
 function getInitialRoute(): Route {
   return window.location.pathname.includes("edit") ? "edit" : "view";
@@ -21,9 +25,14 @@ export default function App() {
   const [companies, setCompanies] = useState<Company[]>(loadCompaniesFallback);
   const [selectedId, setSelectedId] = useState(companies[0]?.id ?? "");
   const [userLocation, setUserLocation] = useState<GeoPoint | null>(null);
+  const [mapOrigin, setMapOrigin] = useState<GeoPoint | null>(null);
   const [geoError, setGeoError] = useState("");
   const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState("");
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
+  const [syncMessage, setSyncMessage] = useState("Local cache ready");
+  const selectedCompanyRef = useRef<Company | undefined>(undefined);
+  const userLocationRef = useRef<GeoPoint | null>(null);
 
   const selectedCompany = useMemo(
     () => companies.find((company) => company.id === selectedId) ?? companies[0],
@@ -52,6 +61,16 @@ export default function App() {
     return metersBetween(userLocation, selectedCompany);
   }, [selectedCompany, userLocation]);
 
+  const isArrived = distance !== null && distance <= ARRIVAL_RADIUS_METERS;
+
+  useEffect(() => {
+    selectedCompanyRef.current = selectedCompany;
+  }, [selectedCompany]);
+
+  useEffect(() => {
+    userLocationRef.current = userLocation;
+  }, [userLocation]);
+
   useEffect(() => {
     if (!companies.some((company) => company.id === selectedId)) {
       setSelectedId(companies[0]?.id ?? "");
@@ -60,6 +79,8 @@ export default function App() {
 
   useEffect(() => {
     let isMounted = true;
+    setSyncStatus("loading");
+    setSyncMessage("Loading shared data");
 
     fetchSharedCompanies()
       .then((sharedCompanies) => {
@@ -74,8 +95,17 @@ export default function App() {
             : (sharedCompanies[0]?.id ?? ""),
         );
         cacheCompanies(sharedCompanies);
+        setSyncStatus("synced");
+        setSyncMessage("Shared data loaded");
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (!isMounted) {
+          return;
+        }
+
+        setSyncStatus("error");
+        setSyncMessage("Shared data unavailable");
+      });
 
     return () => {
       isMounted = false;
@@ -94,9 +124,25 @@ export default function App() {
 
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
-        setUserLocation({
+        const nextLocation = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
+        };
+
+        setUserLocation(nextLocation);
+        setMapOrigin((currentOrigin) => {
+          if (!currentOrigin) {
+            return nextLocation;
+          }
+
+          const currentCompany = selectedCompanyRef.current;
+          if (currentCompany && metersBetween(nextLocation, currentCompany) <= ARRIVAL_RADIUS_METERS) {
+            return currentOrigin;
+          }
+
+          return metersBetween(currentOrigin, nextLocation) >= MAP_ORIGIN_UPDATE_METERS
+            ? nextLocation
+            : currentOrigin;
         });
         setGeoError("");
       },
@@ -113,16 +159,28 @@ export default function App() {
     return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
+  useEffect(() => {
+    setMapOrigin(userLocationRef.current);
+  }, [selectedId]);
+
   function persistCompanies(nextCompanies: Company[]) {
+    const previousCompanies = companies;
     setCompanies(nextCompanies);
     cacheCompanies(nextCompanies);
+    setSyncStatus("saving");
+    setSyncMessage("Saving shared data");
     void saveSharedCompanies(nextCompanies)
       .then((sharedCompanies) => {
         setCompanies(sharedCompanies);
         cacheCompanies(sharedCompanies);
+        setSyncStatus("synced");
+        setSyncMessage("Shared data synced");
       })
       .catch(() => {
-        cacheCompanies(nextCompanies);
+        setCompanies(previousCompanies);
+        cacheCompanies(previousCompanies);
+        setSyncStatus("error");
+        setSyncMessage("Save failed. Not shared.");
       });
   }
 
@@ -211,7 +269,12 @@ export default function App() {
   }
 
   return (
-    <AppShell route={route} setRoute={handleRouteChange}>
+    <AppShell
+      route={route}
+      setRoute={handleRouteChange}
+      syncMessage={syncMessage}
+      syncStatus={syncStatus}
+    >
       {route === "view" ? (
         <ViewPage
           companies={companies}
@@ -222,6 +285,8 @@ export default function App() {
           reorderCompanies={reorderCompanies}
           selectedCompany={selectedCompany}
           selectedId={selectedId}
+          isArrived={isArrived}
+          mapOrigin={mapOrigin}
           setSelectedId={setSelectedId}
           startEditingCompany={startEditingCompany}
           startNewCompany={startNewCompany}
