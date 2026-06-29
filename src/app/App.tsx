@@ -18,6 +18,10 @@ type SyncStatus = "idle" | "loading" | "saving" | "synced" | "error";
 
 const MAP_ORIGIN_UPDATE_METERS = 35;
 
+function toDateKey(value = new Date().toISOString()) {
+  return value.slice(0, 10);
+}
+
 function getInitialRoute(): Route {
   const pathname = window.location.pathname;
 
@@ -43,7 +47,12 @@ function getInitialRoute(): Route {
 export default function App() {
   const [route, setRoute] = useState<Route>(getInitialRoute);
   const [companies, setCompanies] = useState<Company[]>(loadCompaniesFallback);
-  const [selectedId, setSelectedId] = useState(companies[0]?.id ?? "");
+  const [selectedDate, setSelectedDate] = useState(toDateKey());
+  const visibleCompanies = useMemo(
+    () => companies.filter((company) => toDateKey(company.createdAt) === selectedDate),
+    [companies, selectedDate],
+  );
+  const [selectedId, setSelectedId] = useState(visibleCompanies[0]?.id ?? "");
   const [userLocation, setUserLocation] = useState<GeoPoint | null>(null);
   const [mapOrigin, setMapOrigin] = useState<GeoPoint | null>(null);
   const [geoError, setGeoError] = useState("");
@@ -55,9 +64,15 @@ export default function App() {
   const userLocationRef = useRef<GeoPoint | null>(null);
 
   const selectedCompany = useMemo(
-    () => companies.find((company) => company.id === selectedId) ?? companies[0],
-    [companies, selectedId],
+    () => visibleCompanies.find((company) => company.id === selectedId) ?? visibleCompanies[0],
+    [visibleCompanies, selectedId],
   );
+
+  const availableDates = useMemo(() => {
+    const dateSet = new Set(companies.map((company) => toDateKey(company.createdAt)));
+    dateSet.add(toDateKey());
+    return [...dateSet].sort((left, right) => right.localeCompare(left));
+  }, [companies]);
 
   const editingCompany = useMemo(() => {
     if (editingCompanyId === "") {
@@ -92,10 +107,10 @@ export default function App() {
   }, [userLocation]);
 
   useEffect(() => {
-    if (!companies.some((company) => company.id === selectedId)) {
-      setSelectedId(companies[0]?.id ?? "");
+    if (!visibleCompanies.some((company) => company.id === selectedId)) {
+      setSelectedId(visibleCompanies[0]?.id ?? "");
     }
-  }, [companies, selectedId]);
+  }, [visibleCompanies, selectedId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -110,9 +125,11 @@ export default function App() {
 
         setCompanies(sharedCompanies);
         setSelectedId((currentId) =>
-          sharedCompanies.some((company) => company.id === currentId)
+          sharedCompanies.some(
+            (company) => company.id === currentId && toDateKey(company.createdAt) === selectedDate,
+          )
             ? currentId
-            : (sharedCompanies[0]?.id ?? ""),
+            : (sharedCompanies.find((company) => toDateKey(company.createdAt) === selectedDate)?.id ?? ""),
         );
         cacheCompanies(sharedCompanies);
         setSyncStatus("synced");
@@ -130,7 +147,7 @@ export default function App() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [selectedDate]);
 
   useEffect(() => {
     window.history.replaceState(null, "", `/${route}`);
@@ -213,6 +230,7 @@ export default function App() {
     })();
 
     persistCompanies(nextCompanies);
+    setSelectedDate(toDateKey(company.createdAt));
     setSelectedId(company.id);
     setEditingCompanyId(company.id);
     setRoute("view");
@@ -224,6 +242,7 @@ export default function App() {
     }
 
     persistCompanies([...newCompanies, ...companies]);
+    setSelectedDate(toDateKey(newCompanies[0]?.createdAt));
     setSelectedId(newCompanies[0]?.id ?? "");
     setEditingCompanyId(newCompanies[0]?.id ?? "");
     setRoute("view");
@@ -282,13 +301,13 @@ export default function App() {
   }
 
   function selectNextCompany() {
-    if (companies.length === 0 || !selectedId) {
+    if (visibleCompanies.length === 0 || !selectedId) {
       return;
     }
 
-    const currentIndex = companies.findIndex((company) => company.id === selectedId);
-    const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % companies.length : 0;
-    setSelectedId(companies[nextIndex]?.id ?? "");
+    const currentIndex = visibleCompanies.findIndex((company) => company.id === selectedId);
+    const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % visibleCompanies.length : 0;
+    setSelectedId(visibleCompanies[nextIndex]?.id ?? "");
   }
 
   function confirmDeleteCompany() {
@@ -301,7 +320,9 @@ export default function App() {
     setPendingDeleteId("");
 
     if (selectedId === pendingDeleteId) {
-      setSelectedId(nextCompanies[0]?.id ?? "");
+      setSelectedId(
+        nextCompanies.find((company) => toDateKey(company.createdAt) === selectedDate)?.id ?? "",
+      );
     }
 
     if (editingCompanyId === pendingDeleteId) {
@@ -331,10 +352,13 @@ export default function App() {
 
   return (
       <AppShell
-        companies={companies}
+        availableDates={availableDates}
+        companies={visibleCompanies}
         reorderCompanies={reorderCompanies}
       route={route}
       selectedId={selectedId}
+      selectedDate={selectedDate}
+      setSelectedDate={setSelectedDate}
       setRoute={handleRouteChange}
       setSelectedId={setSelectedId}
       startNewCompany={startNewCompany}
@@ -374,7 +398,7 @@ export default function App() {
           userLocation={userLocation}
         />
       ) : route === "analytics" ? (
-        <AnalyticsPage companies={companies} />
+        <AnalyticsPage companies={visibleCompanies} />
       ) : (
         <AboutPage />
       )}

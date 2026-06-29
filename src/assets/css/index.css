@@ -172,7 +172,7 @@ p {
   padding: 4px;
   border: 1px solid rgba(226, 232, 240, 0.22);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
+  background: #ffffff;
   object-fit: contain;
 }
 
@@ -409,13 +409,119 @@ p {
   font-size: 0.72rem;
 }
 
-.applied-dot {
+.status-dot {
   padding: 4px 6px;
   border-radius: 999px;
-  background: rgba(5, 150, 105, 0.18);
-  color: #86efac;
   font-size: 0.64rem;
   font-weight: 800;
+}
+
+.status-dot.applied {
+  background: rgba(5, 150, 105, 0.18);
+  color: #86efac;
+}
+
+.status-dot.rejected {
+  background: rgba(225, 29, 72, 0.18);
+  color: #fecdd3;
+}
+
+.date-dropdown {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.date-trigger {
+  display: flex;
+  width: 100%;
+  min-height: 54px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+  text-align: left;
+}
+
+.date-trigger span,
+.date-trigger small,
+.date-trigger strong {
+  display: block;
+}
+
+.date-trigger small {
+  margin-bottom: 3px;
+  color: #94a3b8;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.date-trigger strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.date-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+  z-index: 5;
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  background: #0c1224;
+  box-shadow: 0 18px 42px rgba(2, 6, 23, 0.32);
+}
+
+.date-options {
+  display: grid;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.date-options button {
+  display: grid;
+  gap: 2px;
+  min-height: 44px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: transparent;
+  color: #e2e8f0;
+  text-align: left;
+}
+
+.date-options button.active,
+.date-options button:hover {
+  background: rgba(37, 99, 235, 0.18);
+}
+
+.date-options span,
+.date-options small {
+  display: block;
+}
+
+.date-options span {
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.date-options small,
+.date-options p {
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .company-actions {
@@ -1632,7 +1738,7 @@ textarea:focus {
   }
 
   .sidebar-menu {
-    max-height: 520px;
+    max-height: none;
   }
 
   .analytics-grid,
@@ -1687,6 +1793,37 @@ textarea:focus {
     min-height: 0;
     transform: translateX(calc(-100% - 24px));
     transition: transform 220ms ease;
+  }
+
+  .sidebar-menu {
+    display: grid;
+    flex: 1 1 auto;
+    align-content: start;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+  }
+
+  .nav-group {
+    min-height: 0;
+  }
+
+  .companies-nav-group,
+  .nav-group:has(.company-accordion) {
+    display: grid;
+    flex: initial;
+  }
+
+  .company-accordion {
+    flex: initial;
+    min-height: 0;
+    grid-template-rows: none;
+  }
+
+  .company-list {
+    min-height: 0;
+    overflow: visible;
+    padding-right: 2px;
   }
 
   .side-nav.open {
@@ -1846,7 +1983,7 @@ textarea:focus {
     grid-template-columns: 18px minmax(0, 1fr);
   }
 
-  .applied-dot {
+  .status-dot {
     grid-column: 2;
     width: fit-content;
   }

@@ -7,10 +7,13 @@ import type { Company, Route } from "../types";
 
 export function AppShell({
   children,
+  availableDates,
   companies,
   reorderCompanies,
   route,
   selectedId,
+  selectedDate,
+  setSelectedDate,
   setRoute,
   setSelectedId,
   startNewCompany,
@@ -18,10 +21,13 @@ export function AppShell({
   syncStatus,
 }: {
   children: ReactNode;
+  availableDates: string[];
   companies: Company[];
   reorderCompanies: (sourceId: string, targetId: string, placement?: "before" | "after") => void;
   route: Route;
   selectedId: string;
+  selectedDate: string;
+  setSelectedDate: (date: string) => void;
   setRoute: (route: Route) => void;
   setSelectedId: (id: string) => void;
   startNewCompany: () => void;
@@ -79,12 +85,15 @@ export function AppShell({
         />
       ) : null}
       <CompanySidebar
+        availableDates={availableDates}
         companies={companies}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         reorderCompanies={reorderCompanies}
         route={route}
         selectedId={selectedId}
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
         setRoute={handleRouteChange}
         setSelectedId={handleSelectCompany}
         startNewCompany={handleStartNewCompany}

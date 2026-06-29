@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { DragEvent, PointerEvent } from "react";
+import { DateDropdown } from "./DateDropdown";
 import { FaIcon } from "./FaIcon";
 import logo from "../../assets/images/logo.png";
 import type { Company, Route } from "../types";
@@ -8,22 +9,28 @@ type AccordionGroup = "companies" | "management" | null;
 type DropPlacement = "before" | "after";
 
 export function CompanySidebar({
+  availableDates,
   companies,
   isOpen,
   onClose,
   reorderCompanies,
   route,
   selectedId,
+  selectedDate,
+  setSelectedDate,
   setRoute,
   startNewCompany,
   setSelectedId,
 }: {
+  availableDates: string[];
   companies: Company[];
   isOpen: boolean;
   onClose: () => void;
   reorderCompanies: (sourceId: string, targetId: string, placement?: DropPlacement) => void;
   route: Route;
   selectedId: string;
+  selectedDate: string;
+  setSelectedDate: (date: string) => void;
   setRoute: (route: Route) => void;
   startNewCompany: () => void;
   setSelectedId: (id: string) => void;
@@ -141,8 +148,14 @@ export function CompanySidebar({
         </button>
       </div>
 
+      <DateDropdown
+        availableDates={availableDates}
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+      />
+
       <nav className="sidebar-menu" aria-label="Primary">
-        <section className="nav-group">
+        <section className="nav-group companies-nav-group">
           <button
             className={`nav-parent ${route === "view" ? "active" : ""}`}
             type="button"
@@ -226,7 +239,8 @@ export function CompanySidebar({
                             <strong>{company.name}</strong>
                             <small>{company.locationLabel}</small>
                           </span>
-                          {company.appliedAt ? <span className="applied-dot">Applied</span> : null}
+                          {company.appliedAt ? <span className="status-dot applied">Applied</span> : null}
+                          {company.rejectedAt ? <span className="status-dot rejected">Rejected</span> : null}
                         </button>
                       </article>
                     );
