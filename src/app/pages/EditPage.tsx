@@ -2,6 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { FaIcon } from "../components/FaIcon";
 import { MapPanel } from "../components/MapPanel";
+import {
+  formatDateLabel,
+  getRelativeDateLabel,
+  timestampForDateKey,
+  toDateKey,
+  todayKey,
+  tomorrowKey,
+} from "../lib/dates";
 import { geocodeLocation, parseCoordinates } from "../lib/geo";
 import type { Company, GeoPoint } from "../types";
 
@@ -10,6 +18,7 @@ export function EditPage({
   onDelete,
   onSave,
   onSaveMany,
+  selectedDate,
   selectedCompany,
   userLocation,
 }: {
@@ -17,6 +26,7 @@ export function EditPage({
   onDelete: (id: string) => void;
   onSave: (company: Company) => void;
   onSaveMany: (companies: Company[]) => void;
+  selectedDate: string;
   selectedCompany?: Company;
   userLocation: GeoPoint | null;
 }) {
@@ -24,6 +34,7 @@ export function EditPage({
   const [positions, setPositions] = useState("");
   const [locationLabel, setLocationLabel] = useState("");
   const [locationInput, setLocationInput] = useState("");
+  const [targetDate, setTargetDate] = useState(selectedDate);
   const [editingId, setEditingId] = useState("");
   const [error, setError] = useState("");
   const [bulkMessage, setBulkMessage] = useState("");
@@ -45,7 +56,7 @@ export function EditPage({
         locationLabel: locationLabel || "Selected location",
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
-        createdAt: selectedCompany?.createdAt ?? new Date().toISOString(),
+        createdAt: selectedCompany?.createdAt ?? timestampForDateKey(targetDate),
         appliedAt: selectedCompany?.appliedAt ?? "",
         rejectedAt: selectedCompany?.rejectedAt ?? "",
       }
@@ -60,6 +71,7 @@ export function EditPage({
       setLocationLabel("");
       setLocationInput("");
       setEditingId("");
+      setTargetDate(selectedDate);
       setError("");
       return;
     }
@@ -69,7 +81,8 @@ export function EditPage({
     setLocationLabel(selectedCompany.locationLabel);
     setLocationInput(`${selectedCompany.latitude}, ${selectedCompany.longitude}`);
     setEditingId(selectedCompany.id);
-  }, [mode, selectedCompany]);
+    setTargetDate(toDateKey(selectedCompany.createdAt));
+  }, [mode, selectedCompany, selectedDate]);
 
   function useCurrentLocation() {
     if (!userLocation) {
@@ -144,6 +157,11 @@ export function EditPage({
       return null;
     }
 
+    if (!targetDate) {
+      setError("Schedule date is required.");
+      return null;
+    }
+
     return {
       id: editingId || crypto.randomUUID(),
       name: name.trim(),
@@ -151,7 +169,7 @@ export function EditPage({
       locationLabel: locationLabel.trim(),
       latitude: parsed.latitude,
       longitude: parsed.longitude,
-      createdAt: selectedCompany?.createdAt ?? new Date().toISOString(),
+      createdAt: timestampForDateKey(targetDate),
       appliedAt: selectedCompany?.appliedAt ?? "",
       rejectedAt: selectedCompany?.rejectedAt ?? "",
     };
@@ -211,6 +229,29 @@ export function EditPage({
               {mode === "bulk" ? "Add to pending" : editingId ? "Edit company" : "Single add"}
             </h1>
           </div>
+
+          <label>
+            <span>Schedule date</span>
+            <div className="schedule-field">
+              <input
+                onChange={(event) => setTargetDate(event.target.value)}
+                required
+                type="date"
+                value={targetDate}
+              />
+              <div className="schedule-shortcuts" aria-label="Schedule shortcuts">
+                <button type="button" onClick={() => setTargetDate(todayKey())}>
+                  Today
+                </button>
+                <button type="button" onClick={() => setTargetDate(tomorrowKey())}>
+                  Tomorrow
+                </button>
+              </div>
+            </div>
+            <small className="schedule-note">
+              {getRelativeDateLabel(targetDate) || formatDateLabel(targetDate)} companies show only when this date is selected.
+            </small>
+          </label>
 
           <label>
             <span>Company name</span>
@@ -310,7 +351,11 @@ export function EditPage({
                   <article className={selectedDraft?.id === company.id ? "active" : ""} key={company.id}>
                     <button type="button" onClick={() => setSelectedDraftId(company.id)}>
                       <strong>{company.name}</strong>
-                      <small>{company.locationLabel}</small>
+                      <small>
+                        {getRelativeDateLabel(toDateKey(company.createdAt)) ||
+                          formatDateLabel(toDateKey(company.createdAt))}{" "}
+                        - {company.locationLabel}
+                      </small>
                     </button>
                     <button
                       aria-label={`Remove ${company.name}`}

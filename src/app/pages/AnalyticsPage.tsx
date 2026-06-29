@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { FaIcon } from "../components/FaIcon";
+import { toDateKey } from "../lib/dates";
 import type { Company } from "../types";
 
 type AnalyticsMode = "daily" | "overall";
@@ -48,19 +49,19 @@ export function AnalyticsPage({ companies }: { companies: Company[] }) {
     for (let dayOffset = 5; dayOffset >= 0; dayOffset -= 1) {
       const date = new Date();
       date.setDate(today.getDate() - dayOffset);
-      const key = date.toISOString().slice(0, 10);
+      const key = toDateKey(date);
       dayMap.set(key, { label: formatShortDate(date.toISOString()), added: 0, applied: 0 });
     }
 
     companies.forEach((company) => {
-      const createdKey = new Date(company.createdAt).toISOString().slice(0, 10);
+      const createdKey = toDateKey(company.createdAt);
       const createdBucket = dayMap.get(createdKey);
       if (createdBucket) {
         createdBucket.added += 1;
       }
 
       if (company.appliedAt) {
-        const appliedKey = new Date(company.appliedAt).toISOString().slice(0, 10);
+        const appliedKey = toDateKey(company.appliedAt);
         const appliedBucket = dayMap.get(appliedKey);
         if (appliedBucket) {
           appliedBucket.applied += 1;

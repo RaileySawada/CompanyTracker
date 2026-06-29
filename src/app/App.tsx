@@ -7,6 +7,7 @@ import {
   loadCompaniesFallback,
   saveSharedCompanies,
 } from "./lib/companiesApi";
+import { todayKey, tomorrowKey, toDateKey } from "./lib/dates";
 import { ARRIVAL_RADIUS_METERS, metersBetween } from "./lib/geo";
 import { AboutPage } from "./pages/AboutPage";
 import { AnalyticsPage } from "./pages/AnalyticsPage";
@@ -17,10 +18,6 @@ import type { Company, GeoPoint, Route } from "./types";
 type SyncStatus = "idle" | "loading" | "saving" | "synced" | "error";
 
 const MAP_ORIGIN_UPDATE_METERS = 35;
-
-function toDateKey(value = new Date().toISOString()) {
-  return value.slice(0, 10);
-}
 
 function getInitialRoute(): Route {
   const pathname = window.location.pathname;
@@ -47,7 +44,7 @@ function getInitialRoute(): Route {
 export default function App() {
   const [route, setRoute] = useState<Route>(getInitialRoute);
   const [companies, setCompanies] = useState<Company[]>(loadCompaniesFallback);
-  const [selectedDate, setSelectedDate] = useState(toDateKey());
+  const [selectedDate, setSelectedDate] = useState(todayKey);
   const visibleCompanies = useMemo(
     () => companies.filter((company) => toDateKey(company.createdAt) === selectedDate),
     [companies, selectedDate],
@@ -70,7 +67,8 @@ export default function App() {
 
   const availableDates = useMemo(() => {
     const dateSet = new Set(companies.map((company) => toDateKey(company.createdAt)));
-    dateSet.add(toDateKey());
+    dateSet.add(todayKey());
+    dateSet.add(tomorrowKey());
     return [...dateSet].sort((left, right) => right.localeCompare(left));
   }, [companies]);
 
@@ -351,10 +349,10 @@ export default function App() {
   }
 
   return (
-      <AppShell
-        availableDates={availableDates}
-        companies={visibleCompanies}
-        reorderCompanies={reorderCompanies}
+    <AppShell
+      availableDates={availableDates}
+      companies={visibleCompanies}
+      reorderCompanies={reorderCompanies}
       route={route}
       selectedId={selectedId}
       selectedDate={selectedDate}
@@ -386,6 +384,7 @@ export default function App() {
           onDelete={deleteCompany}
           onSave={upsertCompany}
           onSaveMany={addCompanies}
+          selectedDate={selectedDate}
           selectedCompany={editingCompany}
           userLocation={userLocation}
         />
@@ -395,10 +394,11 @@ export default function App() {
           onDelete={deleteCompany}
           onSave={upsertCompany}
           onSaveMany={addCompanies}
+          selectedDate={selectedDate}
           userLocation={userLocation}
         />
       ) : route === "analytics" ? (
-        <AnalyticsPage companies={visibleCompanies} />
+        <AnalyticsPage companies={companies} />
       ) : (
         <AboutPage />
       )}

@@ -1,14 +1,6 @@
 import { useMemo, useState } from "react";
+import { formatDateLabel, getRelativeDateLabel } from "../lib/dates";
 import { FaIcon } from "./FaIcon";
-
-function formatDateLabel(value: string) {
-  const date = new Date(`${value}T00:00:00`);
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(date);
-}
 
 export function DateDropdown({
   availableDates,
@@ -29,7 +21,7 @@ export function DateDropdown({
         return true;
       }
 
-      return `${date} ${formatDateLabel(date)}`.toLowerCase().includes(normalizedQuery);
+      return `${date} ${formatDateLabel(date)} ${getRelativeDateLabel(date)}`.toLowerCase().includes(normalizedQuery);
     });
   }, [availableDates, query]);
 
@@ -44,7 +36,7 @@ export function DateDropdown({
       <button className="date-trigger" type="button" onClick={() => setIsOpen((current) => !current)}>
         <span>
           <small>Showing date</small>
-          <strong>{formatDateLabel(selectedDate)}</strong>
+          <strong>{getRelativeDateLabel(selectedDate) || formatDateLabel(selectedDate)}</strong>
         </span>
         <FaIcon name={isOpen ? "chevronUp" : "chevronDown"} />
       </button>
@@ -74,8 +66,8 @@ export function DateDropdown({
                   type="button"
                   onClick={() => selectDate(date)}
                 >
-                  <span>{formatDateLabel(date)}</span>
-                  <small>{date}</small>
+                  <span>{getRelativeDateLabel(date) || formatDateLabel(date)}</span>
+                  <small>{getRelativeDateLabel(date) ? formatDateLabel(date) : date}</small>
                 </button>
               ))
             ) : (
