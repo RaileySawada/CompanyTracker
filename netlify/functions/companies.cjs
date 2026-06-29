@@ -13,6 +13,8 @@ const fallbackCompanies = [
     latitude: 14.5547,
     longitude: 121.0244,
     createdAt: new Date().toISOString(),
+    appliedAt: "",
+    rejectedAt: "",
   },
   {
     id: "sample-vertex",
@@ -22,6 +24,8 @@ const fallbackCompanies = [
     latitude: 14.5503,
     longitude: 121.0507,
     createdAt: new Date().toISOString(),
+    appliedAt: "",
+    rejectedAt: "",
   },
 ];
 
@@ -63,6 +67,8 @@ function normalizeCompany(company) {
     latitude,
     longitude,
     createdAt: String(company.createdAt || new Date().toISOString()),
+    appliedAt: company.appliedAt ? String(company.appliedAt) : "",
+    rejectedAt: company.rejectedAt ? String(company.rejectedAt) : "",
   };
 }
 

@@ -8,6 +8,8 @@ import {
   saveSharedCompanies,
 } from "./lib/companiesApi";
 import { ARRIVAL_RADIUS_METERS, metersBetween } from "./lib/geo";
+import { AboutPage } from "./pages/AboutPage";
+import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { EditPage } from "./pages/EditPage";
 import { ViewPage } from "./pages/ViewPage";
 import type { Company, GeoPoint, Route } from "./types";
@@ -17,7 +19,25 @@ type SyncStatus = "idle" | "loading" | "saving" | "synced" | "error";
 const MAP_ORIGIN_UPDATE_METERS = 35;
 
 function getInitialRoute(): Route {
-  return window.location.pathname.includes("edit") ? "edit" : "view";
+  const pathname = window.location.pathname;
+
+  if (pathname.includes("bulk-add")) {
+    return "bulk-add";
+  }
+
+  if (pathname.includes("add")) {
+    return "add";
+  }
+
+  if (pathname.includes("analytics")) {
+    return "analytics";
+  }
+
+  if (pathname.includes("about")) {
+    return "about";
+  }
+
+  return "view";
 }
 
 export default function App() {
@@ -113,7 +133,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    window.history.replaceState(null, "", route === "view" ? "/view" : "/edit");
+    window.history.replaceState(null, "", `/${route}`);
   }, [route]);
 
   useEffect(() => {
@@ -198,11 +218,50 @@ export default function App() {
     setRoute("view");
   }
 
+  function addCompanies(newCompanies: Company[]) {
+    if (newCompanies.length === 0) {
+      return;
+    }
+
+    persistCompanies([...newCompanies, ...companies]);
+    setSelectedId(newCompanies[0]?.id ?? "");
+    setEditingCompanyId(newCompanies[0]?.id ?? "");
+    setRoute("view");
+  }
+
   function deleteCompany(id: string) {
     setPendingDeleteId(id);
   }
 
-  function reorderCompanies(sourceId: string, targetId: string) {
+  function markCompanyApplied(id: string) {
+    const nextCompanies = companies.map((company) =>
+      company.id === id
+        ? {
+            ...company,
+            appliedAt: company.appliedAt || new Date().toISOString(),
+            rejectedAt: "",
+          }
+        : company,
+    );
+
+    persistCompanies(nextCompanies);
+  }
+
+  function markCompanyRejected(id: string) {
+    const nextCompanies = companies.map((company) =>
+      company.id === id
+        ? {
+            ...company,
+            appliedAt: "",
+            rejectedAt: company.rejectedAt || new Date().toISOString(),
+          }
+        : company,
+    );
+
+    persistCompanies(nextCompanies);
+  }
+
+  function reorderCompanies(sourceId: string, targetId: string, placement: "before" | "after" = "before") {
     if (sourceId === targetId) {
       return;
     }
@@ -216,7 +275,9 @@ export default function App() {
 
     const nextCompanies = [...companies];
     const [movedCompany] = nextCompanies.splice(sourceIndex, 1);
-    nextCompanies.splice(targetIndex, 0, movedCompany);
+    const nextTargetIndex = nextCompanies.findIndex((company) => company.id === targetId);
+    const insertIndex = placement === "after" ? nextTargetIndex + 1 : nextTargetIndex;
+    nextCompanies.splice(insertIndex, 0, movedCompany);
     persistCompanies(nextCompanies);
   }
 
@@ -251,17 +312,17 @@ export default function App() {
 
   function startNewCompany() {
     setEditingCompanyId("");
-    setRoute("edit");
+    setRoute("add");
   }
 
   function startEditingCompany(id: string) {
     setSelectedId(id);
     setEditingCompanyId(id);
-    setRoute("edit");
+    setRoute("add");
   }
 
   function handleRouteChange(nextRoute: Route) {
-    if (nextRoute === "edit" && editingCompanyId === "" && selectedId) {
+    if (nextRoute === "add" && editingCompanyId === "" && selectedId) {
       setEditingCompanyId(selectedId);
     }
 
@@ -269,36 +330,53 @@ export default function App() {
   }
 
   return (
-    <AppShell
+      <AppShell
+        companies={companies}
+        reorderCompanies={reorderCompanies}
       route={route}
+      selectedId={selectedId}
       setRoute={handleRouteChange}
+      setSelectedId={setSelectedId}
+      startNewCompany={startNewCompany}
       syncMessage={syncMessage}
       syncStatus={syncStatus}
     >
       {route === "view" ? (
         <ViewPage
-          companies={companies}
           deleteCompany={deleteCompany}
           distance={distance}
           geoError={geoError}
           goToNextCompany={selectNextCompany}
-          reorderCompanies={reorderCompanies}
           selectedCompany={selectedCompany}
-          selectedId={selectedId}
           isArrived={isArrived}
+          markCompanyApplied={markCompanyApplied}
+          markCompanyRejected={markCompanyRejected}
           mapOrigin={mapOrigin}
-          setSelectedId={setSelectedId}
           startEditingCompany={startEditingCompany}
           startNewCompany={startNewCompany}
           userLocation={userLocation}
         />
-      ) : (
+      ) : route === "add" ? (
         <EditPage
+          mode="single"
           onDelete={deleteCompany}
           onSave={upsertCompany}
+          onSaveMany={addCompanies}
           selectedCompany={editingCompany}
           userLocation={userLocation}
         />
+      ) : route === "bulk-add" ? (
+        <EditPage
+          mode="bulk"
+          onDelete={deleteCompany}
+          onSave={upsertCompany}
+          onSaveMany={addCompanies}
+          userLocation={userLocation}
+        />
+      ) : route === "analytics" ? (
+        <AnalyticsPage companies={companies} />
+      ) : (
+        <AboutPage />
       )}
       {pendingDeleteCompany ? (
         <DeleteConfirmModal

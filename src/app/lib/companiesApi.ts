@@ -9,6 +9,18 @@ type CompaniesResponse = {
   message?: string;
 };
 
+function normalizeCompany(company: Company): Company {
+  return {
+    ...company,
+    appliedAt: company.appliedAt ?? "",
+    rejectedAt: company.rejectedAt ?? "",
+  };
+}
+
+function normalizeCompanies(companies: Company[]) {
+  return companies.map(normalizeCompany);
+}
+
 async function readApiError(response: Response, fallback: string) {
   try {
     const data = (await response.json()) as CompaniesResponse;
@@ -26,7 +38,7 @@ export async function fetchSharedCompanies() {
   }
 
   const data = (await response.json()) as CompaniesResponse;
-  return Array.isArray(data.companies) ? data.companies : sampleCompanies;
+  return Array.isArray(data.companies) ? normalizeCompanies(data.companies) : sampleCompanies;
 }
 
 export async function saveSharedCompanies(companies: Company[]) {
@@ -43,7 +55,7 @@ export async function saveSharedCompanies(companies: Company[]) {
   }
 
   const data = (await response.json()) as CompaniesResponse;
-  return Array.isArray(data.companies) ? data.companies : companies;
+  return Array.isArray(data.companies) ? normalizeCompanies(data.companies) : companies;
 }
 
 export function loadCompaniesFallback() {

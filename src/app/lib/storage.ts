@@ -11,6 +11,8 @@ export const sampleCompanies: Company[] = [
     latitude: 14.5547,
     longitude: 121.0244,
     createdAt: new Date().toISOString(),
+    appliedAt: "",
+    rejectedAt: "",
   },
   {
     id: "sample-vertex",
@@ -20,8 +22,18 @@ export const sampleCompanies: Company[] = [
     latitude: 14.5503,
     longitude: 121.0507,
     createdAt: new Date().toISOString(),
+    appliedAt: "",
+    rejectedAt: "",
   },
 ];
+
+function normalizeCompany(company: Company): Company {
+  return {
+    ...company,
+    appliedAt: company.appliedAt ?? "",
+    rejectedAt: company.rejectedAt ?? "",
+  };
+}
 
 export function loadCachedCompanies() {
   try {
@@ -31,7 +43,7 @@ export function loadCachedCompanies() {
     }
 
     const parsed = JSON.parse(stored) as Company[];
-    return Array.isArray(parsed) ? parsed : sampleCompanies;
+    return Array.isArray(parsed) ? parsed.map(normalizeCompany) : sampleCompanies;
   } catch {
     return sampleCompanies;
   }

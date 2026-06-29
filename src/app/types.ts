@@ -6,6 +6,8 @@ export type Company = {
   latitude: number;
   longitude: number;
   createdAt: string;
+  appliedAt?: string;
+  rejectedAt?: string;
 };
 
 export type GeoPoint = {
@@ -13,4 +15,4 @@ export type GeoPoint = {
   longitude: number;
 };
 
-export type Route = "view" | "edit";
+export type Route = "view" | "add" | "bulk-add" | "analytics" | "about";

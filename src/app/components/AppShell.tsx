@@ -1,63 +1,121 @@
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { CompanySidebar } from "./CompanySidebar";
+import { FaIcon } from "./FaIcon";
 import logo from "../../assets/images/logo.png";
-import type { Route } from "../types";
+import type { Company, Route } from "../types";
 
 export function AppShell({
   children,
+  companies,
+  reorderCompanies,
   route,
+  selectedId,
   setRoute,
+  setSelectedId,
+  startNewCompany,
   syncMessage,
   syncStatus,
 }: {
   children: ReactNode;
+  companies: Company[];
+  reorderCompanies: (sourceId: string, targetId: string, placement?: "before" | "after") => void;
   route: Route;
+  selectedId: string;
   setRoute: (route: Route) => void;
+  setSelectedId: (id: string) => void;
+  startNewCompany: () => void;
   syncMessage: string;
   syncStatus: "idle" | "loading" | "saving" | "synced" | "error";
 }) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [route, selectedId]);
+
+  function handleRouteChange(nextRoute: Route) {
+    setRoute(nextRoute);
+    setIsSidebarOpen(false);
+  }
+
+  function handleSelectCompany(id: string) {
+    setSelectedId(id);
+    handleRouteChange("view");
+  }
+
+  function handleStartNewCompany() {
+    startNewCompany();
+    setIsSidebarOpen(false);
+  }
+
+  const routeLabel =
+    route === "view"
+      ? "Companies"
+      : route === "add"
+        ? "Management"
+        : route === "bulk-add"
+          ? "Bulk add"
+          : route === "analytics"
+            ? "Analytics"
+            : "About";
+
   return (
-    <main className="app-shell">
-      <div className="space-grid" aria-hidden="true" />
-      <header className="app-header">
-        <button className="brand-lockup" type="button" onClick={() => setRoute("view")}>
-          <img className="brand-logo" src={logo} alt="" aria-hidden="true" />
-          <span>
-            <strong>Company Tracker</strong>
-            <small>Shared route planner</small>
-          </span>
-        </button>
+    <main className="app-frame">
+      <button
+        aria-label="Open navigation"
+        className="mobile-nav-toggle"
+        type="button"
+        onClick={() => setIsSidebarOpen(true)}
+      >
+        <FaIcon name="bars" />
+      </button>
+      {isSidebarOpen ? (
+        <button
+          aria-label="Close navigation"
+          className="mobile-nav-backdrop"
+          type="button"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      ) : null}
+      <CompanySidebar
+        companies={companies}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        reorderCompanies={reorderCompanies}
+        route={route}
+        selectedId={selectedId}
+        setRoute={handleRouteChange}
+        setSelectedId={handleSelectCompany}
+        startNewCompany={handleStartNewCompany}
+      />
 
-        <nav className="nav-tabs" aria-label="Primary">
-          <button
-            className={route === "view" ? "active" : ""}
-            type="button"
-            onClick={() => setRoute("view")}
-          >
-            View
-          </button>
-          <button
-            className={route === "edit" ? "active" : ""}
-            type="button"
-            onClick={() => setRoute("edit")}
-          >
-            Edit
-          </button>
-        </nav>
-      </header>
+      <section className="main-stage">
+        <header className="dashboard-hero">
+          <div className="hero-pattern" aria-hidden="true" />
+          <div>
+            <p className="eyebrow">{routeLabel}</p>
+            <h1>Company Tracker</h1>
+          </div>
+          <div className="hero-status">
+            <span className={`sync-pill ${syncStatus}`}>{syncMessage}</span>
+            <button type="button" onClick={handleStartNewCompany}>
+              <FaIcon name="plus" />
+              Add company
+            </button>
+          </div>
+        </header>
 
-      {children}
+        {children}
 
-      <footer className="app-footer">
-        <div>
-          <strong>Company Tracker</strong>
-          <span>Shared maps, live GPS, and route ordering.</span>
-        </div>
-        <div className="footer-meta">
-          <span>Serverless on Netlify</span>
-          <span>Shared with Netlify Blobs</span>
-          <span className={`sync-pill ${syncStatus}`}>{syncMessage}</span>
-        </div>
-      </footer>
+        <footer className="page-footer">
+          <div>
+            <img src={logo} alt="" aria-hidden="true" />
+            <span>Company Tracker</span>
+          </div>
+          <span>Copyright © {new Date().getFullYear()} Company Tracker. All rights reserved.</span>
+        </footer>
+      </section>
     </main>
   );
 }
