@@ -67,8 +67,8 @@ function normalizeCompany(company) {
     latitude,
     longitude,
     createdAt: String(company.createdAt || new Date().toISOString()),
-    appliedAt: company.appliedAt ? String(company.appliedAt) : "",
-    rejectedAt: company.rejectedAt ? String(company.rejectedAt) : "",
+    appliedAt: company.appliedAt ? String(company.appliedAt).trim() : "",
+    rejectedAt: company.rejectedAt ? String(company.rejectedAt).trim() : "",
   };
 }
 
@@ -82,7 +82,7 @@ function normalizeCompanies(value) {
 
 async function readCompanies(store) {
   const companies = await store.get(STORE_KEY, { type: "json" });
-  return Array.isArray(companies) ? companies : fallbackCompanies;
+  return normalizeCompanies(Array.isArray(companies) ? companies : fallbackCompanies);
 }
 
 exports.handler = async (event) => {

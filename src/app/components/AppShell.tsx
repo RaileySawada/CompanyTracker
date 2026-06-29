@@ -122,7 +122,7 @@ export function AppShell({
             <img src={logo} alt="" aria-hidden="true" />
             <span>Company Tracker</span>
           </div>
-          <span>Copyright © {new Date().getFullYear()} Company Tracker. All rights reserved.</span>
+          <span>Copyright &copy; {new Date().getFullYear()} Company Tracker. All rights reserved.</span>
         </footer>
       </section>
     </main>

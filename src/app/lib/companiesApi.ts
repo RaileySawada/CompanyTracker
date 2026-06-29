@@ -12,8 +12,8 @@ type CompaniesResponse = {
 function normalizeCompany(company: Company): Company {
   return {
     ...company,
-    appliedAt: company.appliedAt ?? "",
-    rejectedAt: company.rejectedAt ?? "",
+    appliedAt: (company.appliedAt ?? "").trim(),
+    rejectedAt: (company.rejectedAt ?? "").trim(),
   };
 }
 

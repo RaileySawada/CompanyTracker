@@ -158,7 +158,7 @@ export function ViewPage({
             </button>
           </div>
         ) : null}
-        <MapPanel company={selectedCompany} />
+        <MapPanel company={selectedCompany} userLocation={userLocation} />
         <a
           className="directions-button"
           href={directionsUrl(selectedCompany, userLocation)}
