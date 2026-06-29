@@ -200,7 +200,9 @@ p {
 }
 
 .sidebar-menu {
-  display: grid;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
   gap: 8px;
   min-height: 0;
   overflow-y: auto;
@@ -208,8 +210,8 @@ p {
 }
 
 .nav-group {
-  display: grid;
-  gap: 8px;
+  display: block;
+  min-height: 0;
 }
 
 .nav-parent,
@@ -251,13 +253,15 @@ p {
 
 .nav-children {
   margin-left: 4px;
+  margin-top: 8px;
   padding: 10px;
   border-radius: 10px;
   background: var(--nav-panel);
 }
 
 .page-links {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 6px;
 }
 
@@ -269,8 +273,7 @@ p {
 }
 
 .company-accordion {
-  display: grid;
-  gap: 10px;
+  display: block;
 }
 
 .company-search {
@@ -303,9 +306,7 @@ p {
 }
 
 .company-list {
-  display: grid;
-  gap: 8px;
-  align-content: start;
+  display: block;
 }
 
 .company-item {
@@ -325,6 +326,10 @@ p {
     box-shadow 180ms ease,
     opacity 180ms ease,
     transform 180ms ease;
+}
+
+.company-list .company-item + .company-item {
+  margin-top: 8px;
 }
 
 .company-item.active,
@@ -744,6 +749,33 @@ p {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.reschedule-panel {
+  display: grid;
+  grid-template-columns: minmax(190px, 260px) auto;
+  gap: 10px;
+  align-items: end;
+  max-width: 560px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.reschedule-panel button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--primary);
+  color: #ffffff;
+  font-size: 0.86rem;
+  font-weight: 800;
 }
 
 .success-solid {
@@ -1329,7 +1361,7 @@ textarea:focus {
 .forecast-chart {
   position: relative;
   min-height: 300px;
-  overflow: visible;
+  overflow: hidden;
   padding: 10px 12px 18px;
   border-radius: 8px;
   background: #1d2938;
@@ -1339,6 +1371,7 @@ textarea:focus {
   display: block;
   width: 100%;
   height: 244px;
+  overflow: hidden;
 }
 
 .chart-grid-lines line {
@@ -1355,7 +1388,7 @@ textarea:focus {
   stroke: #67e8f9;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 2.5;
+  stroke-width: 2;
   filter: drop-shadow(0 0 7px rgba(34, 211, 238, 0.28));
   vector-effect: non-scaling-stroke;
 }
@@ -1430,9 +1463,10 @@ textarea:focus {
   bottom: calc(100% + 12px);
   z-index: 5;
   display: grid;
-  min-width: 132px;
-  gap: 3px;
-  padding: 9px 10px;
+  min-width: 154px;
+  max-width: 180px;
+  gap: 2px;
+  padding: 8px 9px;
   border: 1px solid rgba(148, 163, 184, 0.24);
   border-radius: 8px;
   background: #020617;
@@ -1465,13 +1499,14 @@ textarea:focus {
 
 .chart-tooltip strong {
   color: #ffffff;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 800;
+  line-height: 1.1;
 }
 
 .chart-tooltip small {
   color: #cbd5e1;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -1482,6 +1517,44 @@ textarea:focus {
 .donut-chart:focus-visible .chart-tooltip {
   opacity: 1;
   transform: translate(-50%, 0);
+}
+
+.forecast-point.edge-start .chart-tooltip {
+  left: 0;
+  transform: translate(0, 6px);
+}
+
+.forecast-point.edge-end .chart-tooltip {
+  right: 0;
+  left: auto;
+  transform: translate(0, 6px);
+}
+
+.forecast-point.edge-start .chart-tooltip::after {
+  left: 10px;
+}
+
+.forecast-point.edge-end .chart-tooltip::after {
+  right: 10px;
+  left: auto;
+  transform: rotate(45deg);
+}
+
+.forecast-point.edge-start:hover .chart-tooltip,
+.forecast-point.edge-start:focus-visible .chart-tooltip,
+.forecast-point.edge-end:hover .chart-tooltip,
+.forecast-point.edge-end:focus-visible .chart-tooltip {
+  transform: translate(0, 0);
+}
+
+.forecast-point.tooltip-below .chart-tooltip {
+  top: calc(100% + 12px);
+  bottom: auto;
+}
+
+.forecast-point.tooltip-below .chart-tooltip::after {
+  top: -5px;
+  bottom: auto;
 }
 
 .donut-wrap {
@@ -1746,19 +1819,34 @@ textarea:focus {
 }
 
 .page-footer {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-top: auto;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
+  overflow: hidden;
+  padding: 14px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 8px;
-  background: var(--surface);
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(5, 150, 105, 0.06)),
+    var(--surface);
   color: var(--muted);
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
   font-size: 0.8rem;
   font-weight: 800;
+}
+
+.page-footer::before {
+  position: absolute;
+  top: 0;
+  right: 16px;
+  left: 16px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary), #22d3ee, var(--success));
+  content: "";
 }
 
 .page-footer div {
@@ -1769,8 +1857,12 @@ textarea:focus {
 }
 
 .page-footer img {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
   object-fit: contain;
 }
 
@@ -1844,9 +1936,9 @@ textarea:focus {
   }
 
   .sidebar-menu {
-    display: grid;
+    display: flex;
     flex: 1 1 auto;
-    align-content: start;
+    flex-direction: column;
     min-height: 0;
     max-height: none;
     overflow-y: auto;
@@ -1858,20 +1950,17 @@ textarea:focus {
 
   .companies-nav-group,
   .nav-group:has(.company-accordion) {
-    display: grid;
-    flex: initial;
+    display: block;
+    min-height: 0;
   }
 
   .company-accordion {
-    flex: initial;
-    min-height: 0;
-    grid-template-rows: none;
+    display: block;
   }
 
   .company-list {
-    min-height: 0;
+    display: block;
     overflow: visible;
-    padding-right: 2px;
   }
 
   .side-nav.open {
@@ -1939,7 +2028,7 @@ textarea:focus {
 
   .page-actions {
     display: grid;
-    grid-template-columns: minmax(72px, 1fr) minmax(78px, 1fr) 42px 42px;
+    grid-template-columns: minmax(70px, 1fr) minmax(76px, 1fr) 42px 42px 42px;
     gap: 6px;
   }
 
@@ -1956,6 +2045,11 @@ textarea:focus {
     width: 42px;
     height: 40px;
     padding: 0;
+  }
+
+  .reschedule-panel {
+    grid-template-columns: 1fr;
+    max-width: none;
   }
 
   .page-actions .mobile-icon-only span {
@@ -2088,7 +2182,7 @@ textarea:focus {
   }
 
   .page-actions {
-    grid-template-columns: minmax(64px, 1fr) minmax(70px, 1fr) 38px 38px;
+    grid-template-columns: minmax(62px, 1fr) minmax(68px, 1fr) 38px 38px 38px;
     gap: 5px;
   }
 

@@ -89,10 +89,10 @@ export function AnalyticsPage({ companies }: { companies: Company[] }) {
     return Array.from(dayMap.values());
   }, [companies, today]);
 
-  const maxChartValue = Math.max(
-    1,
-    ...chartData.map((item) => Math.max(item.added, item.applied)),
+  const chartValues = chartData.map((item) =>
+    mode === "daily" ? item.added + item.applied : item.applied,
   );
+  const maxChartValue = Math.max(1, ...chartValues);
   const dailyCards = [
     { label: "Added today", value: todayAdded, icon: "plus" as const },
     { label: "Applied today", value: todayApplied, icon: "check" as const },
@@ -122,7 +122,7 @@ export function AnalyticsPage({ companies }: { companies: Company[] }) {
   const visibleCards = mode === "daily" ? dailyCards : overallCards;
   const linePoints = chartData.map((item, index) => {
     const x = 8 + index * (84 / Math.max(1, chartData.length - 1));
-    const value = mode === "daily" ? item.added + item.applied : item.applied;
+    const value = chartValues[index] ?? 0;
     const y = 82 - (value / maxChartValue) * 64;
     return { ...item, x, y, value };
   });
@@ -221,7 +221,9 @@ export function AnalyticsPage({ companies }: { companies: Company[] }) {
             <div className="forecast-points" aria-hidden="true">
               {linePoints.map((point) => (
                 <span
-                  className="forecast-point"
+                  className={`forecast-point ${
+                    point.x < 14 ? "edge-start" : point.x > 86 ? "edge-end" : ""
+                  } ${point.y < 30 ? "tooltip-below" : ""}`}
                   key={point.label}
                   style={
                     { left: `${point.x}%`, top: `${point.y}%` } as CSSProperties

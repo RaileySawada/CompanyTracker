@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "./components/AppShell";
 import { DeleteConfirmModal } from "./components/DeleteConfirmModal";
 import {
@@ -7,7 +7,7 @@ import {
   loadCompaniesFallback,
   saveSharedCompanies,
 } from "./lib/companiesApi";
-import { todayKey, tomorrowKey, toDateKey } from "./lib/dates";
+import { timestampForDateKey, todayKey, tomorrowKey, toDateKey } from "./lib/dates";
 import { ARRIVAL_RADIUS_METERS, metersBetween } from "./lib/geo";
 import { AboutPage } from "./pages/AboutPage";
 import { AnalyticsPage } from "./pages/AnalyticsPage";
@@ -16,8 +16,6 @@ import { ViewPage } from "./pages/ViewPage";
 import type { Company, GeoPoint, Route } from "./types";
 
 type SyncStatus = "idle" | "loading" | "saving" | "synced" | "error";
-
-const MAP_ORIGIN_UPDATE_METERS = 35;
 
 function getInitialRoute(): Route {
   const pathname = window.location.pathname;
@@ -51,14 +49,11 @@ export default function App() {
   );
   const [selectedId, setSelectedId] = useState(visibleCompanies[0]?.id ?? "");
   const [userLocation, setUserLocation] = useState<GeoPoint | null>(null);
-  const [mapOrigin, setMapOrigin] = useState<GeoPoint | null>(null);
   const [geoError, setGeoError] = useState("");
   const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState("");
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
   const [syncMessage, setSyncMessage] = useState("Local cache ready");
-  const selectedCompanyRef = useRef<Company | undefined>(undefined);
-  const userLocationRef = useRef<GeoPoint | null>(null);
 
   const selectedCompany = useMemo(
     () => visibleCompanies.find((company) => company.id === selectedId) ?? visibleCompanies[0],
@@ -95,14 +90,6 @@ export default function App() {
   }, [selectedCompany, userLocation]);
 
   const isArrived = distance !== null && distance <= ARRIVAL_RADIUS_METERS;
-
-  useEffect(() => {
-    selectedCompanyRef.current = selectedCompany;
-  }, [selectedCompany]);
-
-  useEffect(() => {
-    userLocationRef.current = userLocation;
-  }, [userLocation]);
 
   useEffect(() => {
     if (!visibleCompanies.some((company) => company.id === selectedId)) {
@@ -165,20 +152,6 @@ export default function App() {
         };
 
         setUserLocation(nextLocation);
-        setMapOrigin((currentOrigin) => {
-          if (!currentOrigin) {
-            return nextLocation;
-          }
-
-          const currentCompany = selectedCompanyRef.current;
-          if (currentCompany && metersBetween(nextLocation, currentCompany) <= ARRIVAL_RADIUS_METERS) {
-            return currentOrigin;
-          }
-
-          return metersBetween(currentOrigin, nextLocation) >= MAP_ORIGIN_UPDATE_METERS
-            ? nextLocation
-            : currentOrigin;
-        });
         setGeoError("");
       },
       () => {
@@ -193,10 +166,6 @@ export default function App() {
 
     return () => navigator.geolocation.clearWatch(watchId);
   }, []);
-
-  useEffect(() => {
-    setMapOrigin(userLocationRef.current);
-  }, [selectedId]);
 
   function persistCompanies(nextCompanies: Company[]) {
     const previousCompanies = companies;
@@ -276,6 +245,24 @@ export default function App() {
     );
 
     persistCompanies(nextCompanies);
+  }
+
+  function rescheduleCompany(id: string, dateKey: string) {
+    const nextCompanies = companies.map((company) =>
+      company.id === id
+        ? {
+            ...company,
+            createdAt: timestampForDateKey(dateKey),
+            appliedAt: "",
+            rejectedAt: "",
+          }
+        : company,
+    );
+
+    persistCompanies(nextCompanies);
+    setSelectedDate(dateKey);
+    setSelectedId(id);
+    setRoute("view");
   }
 
   function reorderCompanies(sourceId: string, targetId: string, placement: "before" | "after" = "before") {
@@ -373,7 +360,7 @@ export default function App() {
           isArrived={isArrived}
           markCompanyApplied={markCompanyApplied}
           markCompanyRejected={markCompanyRejected}
-          mapOrigin={mapOrigin}
+          rescheduleCompany={rescheduleCompany}
           startEditingCompany={startEditingCompany}
           startNewCompany={startNewCompany}
           userLocation={userLocation}
