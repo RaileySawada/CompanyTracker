@@ -202,25 +202,31 @@ p {
 .sidebar-menu {
   display: flex;
   flex-direction: column;
-  gap: 8px;
   flex: 1 1 auto;
   min-height: 0;
-  max-height: none;
+  gap: 8px;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 2px;
 }
 
+.sidebar-menu > * {
+  flex: 0 0 auto;
+}
+
 .nav-group {
   display: block;
+  width: 100%;
 }
 
 .companies-nav-group {
   display: block;
+  width: 100%;
 }
 
 .sidebar-static-links {
   display: block;
+  width: 100%;
 }
 
 .sidebar-static-links > * + * {
