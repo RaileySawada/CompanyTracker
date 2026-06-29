@@ -1328,18 +1328,17 @@ textarea:focus {
 
 .forecast-chart {
   position: relative;
+  min-height: 300px;
   overflow: visible;
-  padding: 14px 14px 14px;
+  padding: 10px 12px 18px;
   border-radius: 8px;
   background: #1d2938;
 }
 
-/* SVG fills the container and scales uniformly — no fixed height needed.
-   The viewBox (200×80) controls the internal coordinate system. */
 .forecast-chart svg {
   display: block;
   width: 100%;
-  height: auto;
+  height: 244px;
 }
 
 .chart-grid-lines line {
@@ -1361,50 +1360,68 @@ textarea:focus {
   vector-effect: non-scaling-stroke;
 }
 
-/* SVG-native dot — sized in viewBox units (200×80), not px */
-.forecast-dot {
-  fill: #1d2938;
-  stroke: #67e8f9;
-  stroke-width: 0.8;
-  transition: stroke 160ms ease;
-}
-
-.forecast-point-group:hover .forecast-dot {
-  fill: #67e8f9;
-  stroke: #a5f3fc;
-}
-
-/* Value label above each dot */
-.forecast-value-label {
-  font-size: 4px; /* viewBox units — stays proportional on any screen */
-  fill: #dbeafe;
-  font-weight: 700;
-  font-family: var(--mono);
-  pointer-events: none;
-}
-
-/* Date label below the chart baseline */
-.forecast-date-label {
-  font-size: 3.5px;
-  fill: #64748b;
-  font-weight: 700;
-  pointer-events: none;
-}
-
-/* Tooltip group: hidden by default, shown on group hover */
-.chart-tooltip-group {
-  opacity: 0;
-  transition: opacity 160ms ease;
-}
-
-.forecast-point-group:hover .chart-tooltip-group {
-  opacity: 1;
-}
-
-.svg-tooltip {
+.forecast-labels {
   display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  color: #94a3b8;
+}
+
+.forecast-labels span,
+.forecast-labels strong,
+.forecast-labels small {
+  display: block;
+  text-align: center;
+}
+
+.forecast-labels strong {
+  margin-bottom: 2px;
+  color: #dbeafe;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
+.forecast-labels small {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
-  transform: translateX(-50%);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.forecast-points {
+  position: absolute;
+  inset: 10px 12px 56px;
+  pointer-events: none;
+}
+
+.forecast-point {
+  position: absolute;
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 3px solid #67e8f9;
+  border-radius: 50%;
+  background: #1d2938;
+  box-shadow:
+    0 0 0 3px rgba(103, 232, 249, 0.12),
+    0 0 18px rgba(103, 232, 249, 0.28);
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
+  transition:
+    background 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.forecast-point:hover,
+.forecast-point:focus-visible {
+  background: #67e8f9;
+  box-shadow:
+    0 0 0 5px rgba(103, 232, 249, 0.16),
+    0 0 26px rgba(103, 232, 249, 0.38);
+  outline: 0;
+  transform: translate(-50%, -50%) scale(1.12);
 }
 
 .chart-tooltip {
@@ -1459,7 +1476,8 @@ textarea:focus {
   white-space: nowrap;
 }
 
-.forecast-point-group:hover .chart-tooltip,
+.forecast-point:hover .chart-tooltip,
+.forecast-point:focus-visible .chart-tooltip,
 .donut-chart:hover .chart-tooltip,
 .donut-chart:focus-visible .chart-tooltip {
   opacity: 1;
@@ -1974,10 +1992,30 @@ textarea:focus {
   }
 
   .forecast-chart {
-    padding: 10px 10px 10px;
+    min-height: auto;
+    padding: 10px 10px 14px;
   }
 
-  /* SVG height is auto from viewBox aspect ratio — no override needed */
+  .forecast-chart svg {
+    height: 210px;
+  }
+
+  .forecast-points {
+    inset: 10px 10px 48px;
+  }
+
+  .forecast-labels {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .forecast-labels strong {
+    font-size: 0.72rem;
+  }
+
+  .forecast-labels small {
+    font-size: 0.62rem;
+  }
 
   .page-footer {
     align-items: flex-start;
@@ -2025,7 +2063,19 @@ textarea:focus {
     flex-direction: column;
   }
 
-  /* forecast-chart inherits padding from chart-panel at this breakpoint */
+  .forecast-chart svg {
+    height: 180px;
+  }
+
+  .forecast-point {
+    width: 15px;
+    height: 15px;
+    border-width: 2px;
+  }
+
+  .forecast-labels small {
+    font-size: 0.56rem;
+  }
 }
 
 @media (max-width: 360px) {
