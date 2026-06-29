@@ -251,6 +251,7 @@ export function CompanySidebar({
           ) : null}
         </section>
 
+        <div className="sidebar-static-links">
         <section className="nav-group">
           <button
             className={`nav-parent ${route === "add" || route === "bulk-add" ? "active" : ""}`}
@@ -290,6 +291,7 @@ export function CompanySidebar({
           <FaIcon name="circleInfo" />
           About
         </button>
+        </div>
       </nav>
     </aside>
   );

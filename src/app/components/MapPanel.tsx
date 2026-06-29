@@ -8,25 +8,12 @@ type GoogleLatLng = {
   lng: number;
 };
 
-type GoogleLeg = {
-  distance?: { text?: string; value?: number };
-  duration?: { text?: string; value?: number };
-};
-
-type GoogleRoute = {
-  summary?: string;
-  legs?: GoogleLeg[];
-};
-
 type GoogleDirectionsResult = {
-  routes?: GoogleRoute[];
+  routes?: unknown[];
 };
 
 type GoogleDirectionsRenderer = {
-  getDirections: () => GoogleDirectionsResult | null;
   setDirections: (directions: GoogleDirectionsResult | null) => void;
-  setMap: (map: GoogleMap | null) => void;
-  setOptions: (options: Record<string, unknown>) => void;
   setRouteIndex: (index: number) => void;
 };
 
@@ -57,13 +44,6 @@ type GoogleMapsApi = {
   Map: new (element: HTMLElement, options: Record<string, unknown>) => GoogleMap;
   Marker: new (options: Record<string, unknown>) => GoogleMarker;
   TravelMode: { DRIVING: string };
-  event: {
-    addListener: (
-      instance: unknown,
-      eventName: string,
-      handler: () => void,
-    ) => { remove: () => void };
-  };
 };
 
 declare global {
@@ -74,12 +54,6 @@ declare global {
   }
 }
 
-type RouteOption = {
-  distance: string;
-  duration: string;
-  label: string;
-};
-
 const GOOGLE_MAPS_SCRIPT_ID = "google-maps-directions-script";
 let googleMapsPromise: Promise<GoogleMapsApi> | null = null;
 
@@ -89,15 +63,6 @@ function toGoogleLatLng(point: GeoPoint): GoogleLatLng {
 
 function routeKey(origin: GeoPoint, destination: GeoPoint) {
   return `${origin.latitude.toFixed(5)},${origin.longitude.toFixed(5)}:${destination.latitude.toFixed(5)},${destination.longitude.toFixed(5)}`;
-}
-
-function getRouteOption(route: GoogleRoute, index: number): RouteOption {
-  const leg = route.legs?.[0];
-  return {
-    distance: leg?.distance?.text || "Distance unavailable",
-    duration: leg?.duration?.text || "Duration unavailable",
-    label: route.summary || (index === 0 ? "Best route" : `Route ${index + 1}`),
-  };
 }
 
 function loadGoogleMaps() {
@@ -175,8 +140,6 @@ export function MapPanel({
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(Boolean(company));
   const [isMapsReady, setIsMapsReady] = useState(false);
-  const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
-  const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
 
   useEffect(() => {
     let isActive = true;
@@ -210,7 +173,7 @@ export function MapPanel({
 
           directionsServiceRef.current = new maps.DirectionsService();
           directionsRendererRef.current = new maps.DirectionsRenderer({
-            draggable: true,
+            draggable: false,
             map: mapRef.current,
             markerOptions: { visible: false },
             polylineOptions: {
@@ -220,11 +183,6 @@ export function MapPanel({
             },
             preserveViewport: true,
             suppressMarkers: true,
-          });
-
-          maps.event.addListener(directionsRendererRef.current, "directions_changed", () => {
-            const directions = directionsRendererRef.current?.getDirections();
-            setRouteOptions((directions?.routes ?? []).map(getRouteOption));
           });
         }
 
@@ -285,7 +243,6 @@ export function MapPanel({
     if (!isMapsReady || !maps || !service || !renderer || !company || !userLocation) {
       renderer?.setDirections(null);
       activeRouteKeyRef.current = "";
-      setRouteOptions([]);
       return;
     }
 
@@ -295,13 +252,12 @@ export function MapPanel({
     }
 
     activeRouteKeyRef.current = nextRouteKey;
-    setSelectedRouteIndex(0);
 
     service.route(
       {
         destination: toGoogleLatLng(company),
         origin: toGoogleLatLng(userLocation),
-        provideRouteAlternatives: true,
+        provideRouteAlternatives: false,
         travelMode: maps.TravelMode.DRIVING,
       },
       (result, status) => {
@@ -311,7 +267,6 @@ export function MapPanel({
 
         if (status !== "OK" || !result?.routes?.length) {
           setErrorMessage("Directions are unavailable for this route");
-          setRouteOptions([]);
           renderer.setDirections(null);
           return;
         }
@@ -319,15 +274,9 @@ export function MapPanel({
         setErrorMessage("");
         renderer.setDirections(result);
         renderer.setRouteIndex(0);
-        setRouteOptions(result.routes.map(getRouteOption));
       },
     );
   }, [company, isMapsReady, userLocation]);
-
-  function selectRoute(index: number) {
-    setSelectedRouteIndex(index);
-    directionsRendererRef.current?.setRouteIndex(index);
-  }
 
   return (
     <div className={`map-panel ${className}`}>
@@ -341,23 +290,6 @@ export function MapPanel({
           />
           {isLoading ? <div className="map-status">Loading Google Maps...</div> : null}
           {errorMessage ? <div className="map-status error">{errorMessage}</div> : null}
-          {routeOptions.length > 1 ? (
-            <div className="route-options" aria-label="Available routes">
-              {routeOptions.map((route, index) => (
-                <button
-                  className={selectedRouteIndex === index ? "active" : ""}
-                  key={`${route.label}-${index}`}
-                  type="button"
-                  onClick={() => selectRoute(index)}
-                >
-                  <strong>{index === 0 ? "Best route" : route.label}</strong>
-                  <span>
-                    {route.duration} · {route.distance}
-                  </span>
-                </button>
-              ))}
-            </div>
-          ) : null}
         </>
       ) : (
         <div className="map-placeholder">

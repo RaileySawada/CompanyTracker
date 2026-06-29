@@ -205,13 +205,26 @@ p {
   gap: 8px;
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
   padding-right: 2px;
 }
 
 .nav-group {
   display: block;
   min-height: 0;
+}
+
+.companies-nav-group {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.sidebar-static-links {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 8px;
 }
 
 .nav-parent,
@@ -273,7 +286,10 @@ p {
 }
 
 .company-accordion {
-  display: block;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
 }
 
 .company-search {
@@ -307,6 +323,10 @@ p {
 
 .company-list {
   display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .company-item {
