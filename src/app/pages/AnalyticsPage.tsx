@@ -290,7 +290,7 @@ export function AnalyticsPage({ companies }: { companies: Company[] }) {
             </div>
             <div className="chart-legend">
               <span>
-                <i className="legend-blue" />
+                <i className="legend-added" />
                 Added
               </span>
               <span>
@@ -335,10 +335,22 @@ export function AnalyticsPage({ companies }: { companies: Company[] }) {
                 >
                   <span className="chart-tooltip">
                     <strong>{point.label}</strong>
-                    <small>Added: {point.added}</small>
-                    <small>Applied: {point.applied}</small>
-                    <small>Rejected: {point.rejected}</small>
-                    <small>Rescheduled: {point.rescheduled}</small>
+                    <small className="tooltip-metric metric-added">
+                      <i />
+                      Added: {point.added}
+                    </small>
+                    <small className="tooltip-metric metric-applied">
+                      <i />
+                      Applied: {point.applied}
+                    </small>
+                    <small className="tooltip-metric metric-rejected">
+                      <i />
+                      Rejected: {point.rejected}
+                    </small>
+                    <small className="tooltip-metric metric-rescheduled">
+                      <i />
+                      Rescheduled: {point.rescheduled}
+                    </small>
                     <small>Total: {point.value}</small>
                   </span>
                 </span>

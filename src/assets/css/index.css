@@ -1550,6 +1550,10 @@ textarea:focus {
   border-radius: 50%;
 }
 
+.legend-added {
+  background: #a78bfa;
+}
+
 .legend-blue {
   background: var(--primary);
 }
@@ -1724,6 +1728,56 @@ textarea:focus {
   font-size: 0.68rem;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.chart-tooltip .tooltip-metric {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tooltip-metric i {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  content: "";
+}
+
+.metric-added {
+  color: #ddd6fe !important;
+}
+
+.metric-added i {
+  background: #a78bfa;
+  box-shadow: 0 0 10px rgba(167, 139, 250, 0.44);
+}
+
+.metric-applied {
+  color: #bbf7d0 !important;
+}
+
+.metric-applied i {
+  background: var(--success);
+  box-shadow: 0 0 10px rgba(5, 150, 105, 0.34);
+}
+
+.metric-rejected {
+  color: #fecdd3 !important;
+}
+
+.metric-rejected i {
+  background: var(--danger);
+  box-shadow: 0 0 10px rgba(225, 29, 72, 0.34);
+}
+
+.metric-rescheduled {
+  color: #bae6fd !important;
+}
+
+.metric-rescheduled i {
+  background: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.34);
 }
 
 .forecast-point:hover .chart-tooltip,
