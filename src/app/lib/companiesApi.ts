@@ -1,13 +1,9 @@
-import { loadCachedCompanies, sampleCompanies, saveCachedCompanies } from "./storage";
+import { get, ref, set } from "firebase/database";
+import { getRealtimeDatabase } from "./firebase";
+import { loadCachedCompanies, saveCachedCompanies } from "./storage";
 import type { Company } from "../types";
 
-const COMPANIES_API = "/api/companies";
-
-type CompaniesResponse = {
-  companies: Company[];
-  detail?: string;
-  message?: string;
-};
+const COMPANIES_PATH = "companies";
 
 function normalizeCompany(company: Company): Company {
   return {
@@ -21,41 +17,39 @@ function normalizeCompanies(companies: Company[]) {
   return companies.map(normalizeCompany);
 }
 
-async function readApiError(response: Response, fallback: string) {
-  try {
-    const data = (await response.json()) as CompaniesResponse;
-    return data.detail || data.message || fallback;
-  } catch {
-    return fallback;
+function parseCompanies(value: unknown) {
+  if (Array.isArray(value)) {
+    return normalizeCompanies(value.filter(Boolean) as Company[]);
   }
+
+  if (value && typeof value === "object") {
+    return normalizeCompanies(Object.values(value) as Company[]);
+  }
+
+  return [];
 }
 
 export async function fetchSharedCompanies() {
-  const response = await fetch(COMPANIES_API);
+  const database = getRealtimeDatabase();
 
-  if (!response.ok) {
-    throw new Error(await readApiError(response, "Unable to load shared companies."));
+  if (!database) {
+    throw new Error("Firebase Realtime Database config is missing.");
   }
 
-  const data = (await response.json()) as CompaniesResponse;
-  return Array.isArray(data.companies) ? normalizeCompanies(data.companies) : sampleCompanies;
+  const snapshot = await get(ref(database, COMPANIES_PATH));
+  return parseCompanies(snapshot.val());
 }
 
 export async function saveSharedCompanies(companies: Company[]) {
-  const response = await fetch(COMPANIES_API, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ companies }),
-  });
+  const database = getRealtimeDatabase();
 
-  if (!response.ok) {
-    throw new Error(await readApiError(response, "Unable to save shared companies."));
+  if (!database) {
+    throw new Error("Firebase Realtime Database config is missing.");
   }
 
-  const data = (await response.json()) as CompaniesResponse;
-  return Array.isArray(data.companies) ? normalizeCompanies(data.companies) : companies;
+  const nextCompanies = normalizeCompanies(companies);
+  await set(ref(database, COMPANIES_PATH), nextCompanies);
+  return nextCompanies;
 }
 
 export function loadCompaniesFallback() {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { CompanySidebar } from "./CompanySidebar";
 import { FaIcon } from "./FaIcon";
+import { VisitorTracker } from "./VisitorTracker";
 import logo from "../../assets/images/logo.png";
 import type { Company, Route } from "../types";
 
@@ -107,6 +108,7 @@ export function AppShell({
             <h1>Company Tracker</h1>
           </div>
           <div className="hero-status">
+            <VisitorTracker />
             <span className={`sync-pill ${syncStatus}`}>{syncMessage}</span>
             <button type="button" onClick={handleStartNewCompany}>
               <FaIcon name="plus" />

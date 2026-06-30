@@ -665,6 +665,89 @@ p {
   gap: 10px;
 }
 
+.visitor-tracker {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, max-content) auto;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 7px 9px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #dbeafe;
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.16);
+  backdrop-filter: blur(12px);
+}
+
+.visitor-stack {
+  display: flex;
+  align-items: center;
+  padding-right: 2px;
+}
+
+.visitor-avatar,
+.visitor-overflow {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 2px solid #030817;
+  border-radius: 50%;
+  color: #ffffff;
+  font-family: var(--mono);
+  font-size: 0.52rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.visitor-avatar {
+  background:
+    radial-gradient(circle at 50% 37%, rgba(255, 255, 255, 0.94) 0 4px, transparent 4.5px),
+    radial-gradient(circle at 50% 82%, rgba(255, 255, 255, 0.88) 0 7px, transparent 7.5px),
+    var(--visitor-color);
+  color: transparent;
+}
+
+.visitor-avatar + .visitor-avatar,
+.visitor-overflow {
+  margin-left: -7px;
+}
+
+.visitor-overflow {
+  min-width: 28px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.6rem;
+}
+
+.visitor-tracker strong {
+  color: #ffffff;
+  font-family: var(--mono);
+  font-size: 0.86rem;
+  line-height: 1;
+}
+
+.visitor-tracker span:not(.visitor-avatar):not(.visitor-overflow) {
+  min-width: 0;
+  color: #aeb9cb;
+  font-size: 0.74rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.visitor-tracker::after {
+  width: 7px;
+  height: 7px;
+  margin-left: 2px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.16);
+  content: "";
+}
+
 .hero-status button,
 .page-actions button,
 .primary-action,
@@ -1490,7 +1573,7 @@ textarea:focus {
 .forecast-chart {
   position: relative;
   min-height: 300px;
-  overflow: hidden;
+  overflow: visible;
   padding: 10px 12px 20px;
   border-radius: 8px;
   background: #1d2938;
@@ -1500,7 +1583,7 @@ textarea:focus {
   display: block;
   width: 100%;
   height: 244px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .chart-grid-lines line {
@@ -2132,6 +2215,11 @@ textarea:focus {
     justify-items: start;
   }
 
+  .visitor-tracker {
+    width: fit-content;
+    max-width: 100%;
+  }
+
   h1 {
     font-size: 1.65rem;
   }
@@ -2385,5 +2473,14 @@ textarea:focus {
 
   .dashboard-hero h1 {
     font-size: 1.4rem;
+  }
+
+  .visitor-tracker {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    width: 100%;
+  }
+
+  .visitor-tracker span:not(.visitor-avatar):not(.visitor-overflow) {
+    white-space: normal;
   }
 }

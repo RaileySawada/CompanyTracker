@@ -10,8 +10,8 @@ A serverless React app for tracking company locations, open positions, live dire
 - Browser geolocation watches the user's live position
 - Google Maps embed previews locations and directions
 - Arrival banner appears when the user is within 90 meters of the company
-- Shared company data is stored with Netlify Blobs through a Netlify Function
-- Browser local storage is only used as a fast fallback cache
+- Shared company data and live visitor presence are stored in Firebase Realtime Database
+- The app starts empty unless Firebase has saved company data
 
 ## Development
 
@@ -20,7 +20,7 @@ npm install
 npm run dev
 ```
 
-Use `netlify dev` when you want to test the shared `/api/companies` function locally.
+Create a `.env.local` file from `.env.example` and fill it with the Firebase web app config.
 
 ## Build
 
@@ -35,6 +35,6 @@ Netlify can use the included `netlify.toml`.
 - Build command: `npm run build`
 - Publish directory: `dist`
 - SPA redirects are configured so `/view` and `/edit` load correctly
-- `/api/companies` is routed to `netlify/functions/companies.cjs`
+- Add the `VITE_FIREBASE_*` values from `.env.example` in Netlify site environment variables
 
-The app is serverless: Netlify serves the React build, and the shared map/company list is read and written by a serverless function using Netlify Blobs. There is no always-running backend server.
+Netlify serves the React build, while Firebase Realtime Database stores shared company data and live visitor presence. There is no always-running backend server.
