@@ -147,6 +147,10 @@ export default function App() {
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
         const nextLocation = {
+          heading:
+            typeof position.coords.heading === "number" && Number.isFinite(position.coords.heading)
+              ? position.coords.heading
+              : null,
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         };

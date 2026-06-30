@@ -68,7 +68,7 @@ export function AppShell({
             : "About";
 
   return (
-    <main className="app-frame">
+    <main className={`app-frame route-${route}`}>
       <button
         aria-label="Open navigation"
         className="mobile-nav-toggle"
@@ -100,7 +100,7 @@ export function AppShell({
         startNewCompany={handleStartNewCompany}
       />
 
-      <section className="main-stage">
+      <section className={`main-stage route-${route}`}>
         <header className="dashboard-hero">
           <div className="hero-pattern" aria-hidden="true" />
           <div>
@@ -110,10 +110,6 @@ export function AppShell({
           <div className="hero-status">
             <VisitorTracker />
             <span className={`sync-pill ${syncStatus}`}>{syncMessage}</span>
-            <button type="button" onClick={handleStartNewCompany}>
-              <FaIcon name="plus" />
-              Add company
-            </button>
           </div>
         </header>
 

@@ -13,6 +13,7 @@ export type Company = {
 export type GeoPoint = {
   latitude: number;
   longitude: number;
+  heading?: number | null;
 };
 
 export type Route = "view" | "add" | "bulk-add" | "analytics" | "about";
